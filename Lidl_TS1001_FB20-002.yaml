@@ -1,72 +1,90 @@
 blueprint:
-  name: Control lights with Zigbee switch
-  description: Use a Zigbee2MQTT switch to control lights via MQTT actions.
+  name: Lidl TS1001 FB20-002 4-button Controller
+  description: Bedien meerdere apparaten met de Lidl TS1001 FB20-002 controller.
   domain: automation
   input:
-    zigbee_topic:
-      name: Zigbee2MQTT topic
-      description: The MQTT topic of the Zigbee switch (e.g., zigbee2mqtt/switch/action)
-      default: "zigbee2mqtt/switch/action"
-    lights:
-      name: Lights
-      description: Select the lights to control
+    controller_name:
+      name: Controller Naam
+      description: De naam van de Zigbee2MQTT controller (zoals ingesteld in Zigbee2MQTT).
+      selector:
+        text:
+          multiline: false
+    target_devices:
+      name: Doelapparaten
+      description: De apparaten die worden bediend door de controller.
       selector:
         target:
           entity:
             domain: light
+    brightness_step:
+      name: Helderheid Stap
+      description: Hoeveel procent de helderheid omhoog of omlaag moet worden aangepast.
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+  source_url: https://github.com/KeesAnker/HA/blob/main/Lidl_TS1001_FB20-002.yaml
+
+defaults:
+  mode: restart
+  max_exceeded: silent
 
 trigger:
   - platform: mqtt
-    topic: !input zigbee_topic
+    topic: !input controller_name/action
 
 variables:
-  command: "{{ trigger.payload }}"
+  command: '{{ trigger.payload }}'
 
 action:
   - service: system_log.write
     data:
-      message: "Received Zigbee command: {{ command }}"
+      message: "Zigbee commando ontvangen: {{ command }}"
       level: warning
+
   - choose:
       - conditions:
           - condition: template
             value_template: "{{ command == 'on' }}"
         sequence:
           - service: light.turn_on
-            target: !input lights
+            target: !input target_devices
             data:
               transition: 1
               brightness_pct: 85
+
       - conditions:
           - condition: template
             value_template: "{{ command == 'off' }}"
         sequence:
           - service: light.turn_off
-            target: !input lights
+            target: !input target_devices
             data:
               transition: 1
+
       - conditions:
           - condition: template
             value_template: "{{ command == 'brightness_step_up' }}"
         sequence:
           - service: light.turn_on
-            target: !input lights
+            target: !input target_devices
             data:
-              brightness_step_pct: 10
+              brightness_step_pct: !input brightness_step
               transition: 1
+
       - conditions:
           - condition: template
             value_template: "{{ command == 'brightness_step_down' }}"
         sequence:
           - service: light.turn_on
-            target: !input lights
+            target: !input target_devices
             data:
-              brightness_step_pct: -10
+              brightness_step_pct: -1 * !input brightness_step
               transition: 1
+
   - service: system_log.write
     data:
-      message: "Action executed for command: {{ command }}"
+      message: "Actie uitgevoerd voor commando: {{ command }}"
       level: info
-
-mode: restart
-max_exceeded: silent
