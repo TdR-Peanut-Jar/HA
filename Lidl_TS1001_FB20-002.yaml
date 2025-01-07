@@ -5,7 +5,7 @@ blueprint:
   input:
     controller_name:
       name: Controller Naam
-      description: De naam van de Zigbee2MQTT controller (zoals ingesteld in Zigbee2MQTT).
+      description: De naam van de Zigbee2MQTT controller (zoals ingesteld in Zigbee2MQTT).\nMoet overeenkomen met de naam in MQTT.
       selector:
         text:
           multiline: false
@@ -27,16 +27,12 @@ blueprint:
           step: 1
   source_url: https://github.com/KeesAnker/HA/blob/main/Lidl_TS1001_FB20-002.yaml
 
-defaults:
-  mode: restart
-  max_exceeded: silent
-
 trigger:
   - platform: mqtt
-    topic: !input controller_name/action
+    topic: "{{ 'zigbee2mqtt/' ~ controller_name ~ '/action' }}"
 
 variables:
-  command: '{{ trigger.payload }}'
+  command: "{{ trigger.payload }}"
 
 action:
   - service: system_log.write
