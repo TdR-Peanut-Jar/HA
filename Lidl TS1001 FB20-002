@@ -1,0 +1,66 @@
+alias: Small remote
+description: "Livarno Lux switch and dimming light remote control"
+trigger:
+  - platform: mqtt
+    topic: "zigbee2mqtt/Device Name/action"
+action:
+  - variables:
+      command: "{{ trigger.payload }}"
+  - service: system_log.write
+    data:
+      message: "Zigbee command ontvangen: {{ command }}"
+      level: warning
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'on' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              device_id:
+                - beb519d3bbd89ff2174f84d84201e62b
+                - a06e45143905cf58c7da52b4e3610916
+            data:
+              transition: 1
+              brightness_pct: 85
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off' }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              device_id:
+                - beb519d3bbd89ff2174f84d84201e62b
+                - a06e45143905cf58c7da52b4e3610916
+            data:
+              transition: 1
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'brightness_step_up' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              device_id:
+                - beb519d3bbd89ff2174f84d84201e62b
+                - a06e45143905cf58c7da52b4e3610916
+            data:
+              brightness_step_pct: 10
+              transition: 1
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'brightness_step_down' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              device_id:
+                - beb519d3bbd89ff2174f84d84201e62b
+                - a06e45143905cf58c7da52b4e3610916
+            data:
+              brightness_step_pct: -10
+              transition: 1
+  - service: system_log.write
+    data:
+      message: "Actie uitgevoerd voor commando: {{ command }}"
+      level: info
+mode: restart
+max_exceeded: silent
