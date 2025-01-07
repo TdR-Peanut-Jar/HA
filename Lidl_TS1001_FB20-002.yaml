@@ -14,8 +14,6 @@ blueprint:
         target:
           entity:
             domain: light
-  source:
-    url: "https://github.com/yourusername/home-assistant-blueprints" # Replace with your GitHub repo URL
 
 trigger:
   - platform: mqtt
