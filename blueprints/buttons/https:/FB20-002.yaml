@@ -1,0 +1,89 @@
+blueprint:
+  name: Zigbee2MQTT schakelaar bedient lamp
+  description: Bedien een lamp via MQTT-commando's van een Zigbee2MQTT-schakelaar (on/off/brightness)
+  domain: automation
+  input:
+    mqtt_topic:
+      name: MQTT topic
+      description: Het MQTT-topic waarop de schakelaar rapporteert (zoals `zigbee2mqtt/woonkamer_schakelaar/action`)
+      selector:
+        text:
+    target_light:
+      name: Doellamp
+      description: De lamp die je wilt bedienen
+      selector:
+        entity:
+          domain: light
+    brightness_step:
+      name: Helderheidsstap (%)
+      description: Hoeveel procent helderheid toe-/afnemen bij knopdruk
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+          unit_of_measurement: "%"
+    transition:
+      name: Overgangstijd (seconden)
+      description: Tijd voor fade-effect bij in-/uitschakelen
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 10
+          unit_of_measurement: s
+
+trigger:
+  - platform: mqtt
+    topic: !input mqtt_topic
+
+variables:
+  command: "{{ trigger.payload }}"
+  target_light: !input target_light
+  step: !input brightness_step
+  transition: !input transition
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'on' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ target_light }}"
+            data:
+              brightness_pct: 85
+              transition: "{{ transition }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off' }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: "{{ target_light }}"
+            data:
+              transition: "{{ transition }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'brightness_step_up' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ target_light }}"
+            data:
+              brightness_step_pct: "{{ step }}"
+              transition: "{{ transition }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'brightness_step_down' }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: "{{ target_light }}"
+            data:
+              brightness_step_pct: "-{{ step }}"
+              transition: "{{ transition }}"
+
+mode: restart
+max_exceeded: silent
