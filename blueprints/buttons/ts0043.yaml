@@ -35,9 +35,11 @@ blueprint:
 trigger:
   - platform: mqtt
     topic: zigbee2mqtt/TS0043/action
-    payload_template: '{{ knopnummer }}_{{ actie_type }}'
 
-condition: []
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.payload == (knopnummer|string) ~ '_' ~ actie_type }}
 
 action:
   - repeat:
