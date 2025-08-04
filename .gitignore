@@ -1,0 +1,30 @@
+# Home Assistant
+*.db
+*.db-shm
+*.db-wal
+home-assistant.log
+home-assistant.log.1
+home-assistant_v2.db
+
+# Backup
+backup/
+*.tar
+*.zip
+
+# Config
+secrets.yaml
+*.yaml.save
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System/OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+*.orig
